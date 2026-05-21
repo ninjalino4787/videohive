@@ -65,7 +65,34 @@ export const updateAvatar = async (req: any, res: Response) => {
   }
 };
 
-export const updateCover = async (req: Request, res: Response) => {};
+export const updateCover = async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const { url, publicId } = req.body;
+    if (!userId) {
+      return res.status(400).json({
+        message: "userId required",
+      });
+    }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "user cant be found",
+      });
+    }
+    user.coverImage = {
+      publicId: publicId,
+      url: url,
+    };
+
+    await user.save();
+    return res.status(200).json({
+      message: "cover image updated sucessfully"
+    })
+  } catch (error) {
+    console.error("internal server error");
+  }
+};
 
 export const getMe = async (req: Request, res: Response) => {};
 export const getFollowers = async (req: Request, res: Response) => {
@@ -100,7 +127,34 @@ export const getFollowers = async (req: Request, res: Response) => {
     });
   }
 };
-export const getFollowing = async (req: Request, res: Response) => {};
+export const getFollowing = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    if (!userId) {
+      return res.status(400).json({
+        message: "user id cant be found",
+      });
+    }
+
+    const user = await User.findById(userId).populate(
+      "Following",
+      "username avatar",
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "following retrieved successfully",
+      following: user.Following,
+    });
+  } catch (error) {
+    console.error("internal server error");
+  }
+};
 
 // ===============================
 // Follow Endpoints
